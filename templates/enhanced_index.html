@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Invoice Processor - PDF & TXT Support</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Enhanced styles for multiple file upload */
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #e1e5e9;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+
+        .file-upload-area:hover {
+            border-color: #007bff;
+            background: rgba(0, 123, 255, 0.05);
+        }
+
+        .file-upload-area.dragover {
+            border-color: #007bff;
+            background: rgba(0, 123, 255, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .uploaded-files {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-icon {
+            font-size: 24px;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 4px;
+        }
+
+        .file-type {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .remove-file {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .remove-file:hover {
+            background: #c82333;
+        }
+
+        .file-pairs-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .file-pair {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .pair-label {
+            font-weight: 700;
+            color: #212529;
+            min-width: 100px;
+        }
+
+        .pair-files {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .pair-file {
+            flex: 1;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 13px;
+            border: 1px solid #dee2e6;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border: 2px solid #dee2e6;
+            background: #ffffff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            border-color: #007bff;
+            background: #007bff;
+            color: white;
+        }
+
+        .mode-btn:hover:not(.active) {
+            border-color: #007bff;
+            color: #007bff;
+        }
+
+        .mode-content {
+            display: none;
+        }
+
+        .mode-content.active {
+            display: block;
+        }
+
+        .combined-processing {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .combined-processing h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .stats-grid-enhanced {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .processing-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 15px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        /* Data view tabs */
+        .data-view-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .data-view-tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .data-view-tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .data-view-tab:hover {
+            color: #007bff;
+        }
+
+        .data-view-content {
+            display: none;
+        }
+
+        .data-view-content.active {
+            display: block;
+        }
+
+        /* Data table */
+        .data-table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .data-table thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #dee2e6;
+            color: #212529;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .quantity-highlight {
+            font-weight: 700;
+            color: #007bff;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>
+                    <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Enhanced Invoice Processor
+                </h1>
+                <p class="header-subtitle">Process PDF and TXT files with intelligent data combination</p>
+            </div>
+        </header>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="single">Single File Processing</button>
+            <button class="mode-btn" data-mode="combined">Combined PDF + TXT Processing</button>
+        </div>
+
+        <!-- Single File Mode -->
+        <div class="mode-content active" id="single-mode">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upload Invoice Data</h2>
+                    <p>Upload your invoice data file (.txt, .csv, or .pdf)</p>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="dataFile" class="form-label">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Invoice Data File
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="dataFile" name="data_file" accept=".txt,.csv,.pdf" required>
+                                <label for="dataFile" class="file-upload-label">
+                                    <span id="fileName">Choose file or drag here</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="invoiceNumber" class="form-label">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                                Invoice Number (Optional)
+                            </label>
+                            <input type="text" id="invoiceNumber" name="invoice_number" class="form-input" placeholder="e.g., 074M-22005649">
+                            <small class="form-help">Leave blank to process all invoices in the file</small>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary" id="processBtn">
+                                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Process Invoice
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="previewBtn">
+                                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                Preview Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Combined Processing Mode -->
+        <div class="mode-content" id="combined-mode">
+            <div class="combined-processing">
+                <h3>📁 Combined PDF + TXT Processing</h3>
+                <p>Upload PDF and TXT files to combine their data intelligently. The system will extract data from PDFs and merge it with structured data from TXT files.</p>
+            </div>
+
+            <div class="upload-section">
+                <!-- PDF Upload -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📄 PDF Files</h3>
+                        <p>Upload PDF invoice documents</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="file-upload-area" id="pdfUploadArea">
+                            <div class="upload-icon">📄</div>
+                            <div class="upload-text">Drop PDF files here or click to browse</div>
+                            <div class="upload-subtext">Supports PDF files (max 16MB each)</div>
+                            <input type="file" class="file-input" id="pdfInput" multiple accept=".pdf">
+                        </div>
+                        <div class="uploaded-files" id="pdfFiles" style="display: none;">
+                            <div class="input-label">Uploaded PDF Files</div>
+                            <div id="pdfFileList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TXT Upload -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📝 TXT Files</h3>
+                        <p>Upload TXT data files</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="file-upload-area" id="txtUploadArea">
+                            <div class="upload-icon">📝</div>
+                            <div class="upload-text">Drop TXT files here or click to browse</div>
+                            <div class="upload-subtext">Supports TXT files (max 16MB each)</div>
+                            <input type="file" class="file-input" id="txtInput" multiple accept=".txt">
+                        </div>
+                        <div class="uploaded-files" id="txtFiles" style="display: none;">
+                            <div class="input-label">Uploaded TXT Files</div>
+                            <div id="txtFileList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="file-pairs-section" id="filePairsSection" style="display: none;">
+                <div class="input-label">File Pairs</div>
+                <div id="filePairsList"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="combinedInvoiceNumber" class="form-label">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Invoice Number (Optional)
+                </label>
+                <input type="text" id="combinedInvoiceNumber" class="form-input" placeholder="e.g., 074M-22005649">
+                <small class="form-help">Leave blank to process all invoices</small>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="processCombinedBtn" disabled>
+                    <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <path d="M16 13H8"></path>
+                        <path d="M16 17H8"></path>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Process Combined Files
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+            <div class="spinner"></div>
+            <p>Processing your files...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="card results-section" style="display: none;">
+            <div class="card-header">
+                <h2>Processing Results</h2>
+            </div>
+            <div class="card-body">
+                <div id="summaryStats" class="stats-grid-enhanced">
+                    <!-- Stats will be populated here -->
+                </div>
+
+                <div class="processing-summary" id="processingSummary">
+                    <!-- Processing summary will be populated here -->
+                </div>
+
+                <div class="result-actions">
+                    <button id="downloadBtn" class="btn btn-success btn-lg">
+                        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Processed CSV
+                    </button>
+                    <button id="processAnotherBtn" class="btn btn-secondary">
+                        Process Another File
+                    </button>
+                </div>
+
+                <!-- Data View Tabs -->
+                <div class="data-view-tabs">
+                    <button class="data-view-tab active" data-view="pre-aggregation">Pre-Aggregation (Raw Data)</button>
+                    <button class="data-view-tab" data-view="post-aggregation">Post-Aggregation (By SKU)</button>
+                </div>
+
+                <!-- Pre-Aggregation View -->
+                <div id="preAggregationView" class="data-view-content active">
+                    <h3>Raw Line Items (Pre-Aggregation)</h3>
+                    <div id="preAggregationStats" class="stats-grid-enhanced" style="margin-bottom: 20px;"></div>
+                    <div id="preAggregationTable" class="data-table-container"></div>
+                </div>
+
+                <!-- Post-Aggregation View -->
+                <div id="postAggregationView" class="data-view-content">
+                    <h3>Aggregated by SKU (Post-Aggregation)</h3>
+                    <div id="postAggregationStats" class="stats-grid-enhanced" style="margin-bottom: 20px;"></div>
+                    <div id="postAggregationTable" class="data-table-container"></div>
+                </div>
+
+                <div id="detailsSection" class="details-section">
+                    <h3>Processing Details</h3>
+                    <div id="processingDetails" class="breakdown-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="errorAlert" class="alert alert-error" style="display: none;">
+            <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <div class="alert-content">
+                <h4>Error</h4>
+                <p id="errorMessage"></p>
+            </div>
+            <button class="alert-close" onclick="closeAlert()">×</button>
+        </div>
+
+        <!-- Success Alert -->
+        <div id="successAlert" class="alert alert-success" style="display: none;">
+            <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <div class="alert-content">
+                <h4>Success</h4>
+                <p id="successMessage"></p>
+            </div>
+            <button class="alert-close" onclick="closeAlert()">×</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Enhanced Invoice Processing System | PDF & TXT Support</p>
+    </footer>
+
+    <script>
+        // State management
+        let currentMode = 'single';
+        let uploadedPdfFiles = [];
+        let uploadedTxtFiles = [];
+        let filePairs = [];
+        let processingResults = null;
+
+        // Mode switching
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                switchMode(mode);
+            });
+        });
+
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update buttons
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.mode-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`${mode}-mode`).classList.add('active');
+            
+            // Reset results
+            hideResults();
+        }
+
+        // Combined mode file upload handling
+        const pdfUploadArea = document.getElementById('pdfUploadArea');
+        const txtUploadArea = document.getElementById('txtUploadArea');
+        const pdfInput = document.getElementById('pdfInput');
+        const txtInput = document.getElementById('txtInput');
+
+        // PDF upload handling
+        pdfUploadArea.addEventListener('click', () => pdfInput.click());
+        pdfUploadArea.addEventListener('dragover', handleDragOver);
+        pdfUploadArea.addEventListener('dragleave', handleDragLeave);
+        pdfUploadArea.addEventListener('drop', (e) => handleDrop(e, 'pdf'));
+
+        // TXT upload handling
+        txtUploadArea.addEventListener('click', () => txtInput.click());
+        txtUploadArea.addEventListener('dragover', handleDragOver);
+        txtUploadArea.addEventListener('dragleave', handleDragLeave);
+        txtUploadArea.addEventListener('drop', (e) => handleDrop(e, 'txt'));
+
+        pdfInput.addEventListener('change', (e) => handleFileSelect(e, 'pdf'));
+        txtInput.addEventListener('change', (e) => handleFileSelect(e, 'txt'));
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e, type) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files, type);
+        }
+
+        function handleFileSelect(e, type) {
+            const files = Array.from(e.target.files);
+            handleFiles(files, type);
+        }
+
+        function handleFiles(files, type) {
+            const validFiles = files.filter(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                const isValidType = type === 'pdf' ? ext === 'pdf' : ext === 'txt';
+                return isValidType && file.size <= 16 * 1024 * 1024;
+            });
+
+            if (validFiles.length !== files.length) {
+                showAlert('warning', 'Some files were rejected (invalid type or size > 16MB)');
+            }
+
+            if (validFiles.length > 0) {
+                uploadFiles(validFiles, type);
+            }
+        }
+
+        async function uploadFiles(files, type) {
+            const formData = new FormData();
+            files.forEach(file => formData.append('files', file));
+
+            try {
+                const response = await fetch('/api/upload-files', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (type === 'pdf') {
+                        uploadedPdfFiles.push(...result.files);
+                        updateFileList('pdf');
+                    } else {
+                        uploadedTxtFiles.push(...result.files);
+                        updateFileList('txt');
+                    }
+                    
+                    generateFilePairs();
+                    showAlert('success', `Successfully uploaded ${result.files.length} ${type.toUpperCase()} files`);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                showAlert('error', `Upload failed: ${error.message}`);
+            }
+        }
+
+        function updateFileList(type) {
+            const files = type === 'pdf' ? uploadedPdfFiles : uploadedTxtFiles;
+            const filesDiv = type === 'pdf' ? document.getElementById('pdfFiles') : document.getElementById('txtFiles');
+            const fileList = type === 'pdf' ? document.getElementById('pdfFileList') : document.getElementById('txtFileList');
+
+            if (files.length === 0) {
+                filesDiv.style.display = 'none';
+                return;
+            }
+
+            filesDiv.style.display = 'block';
+            fileList.innerHTML = '';
+
+            files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">${type === 'pdf' ? '📄' : '📝'}</div>
+                        <div class="file-details">
+                            <div class="file-name">${file.filename}</div>
+                            <div class="file-type">${file.type.toUpperCase()}</div>
+                        </div>
+                    </div>
+                    <button class="remove-file" onclick="removeFile('${type}', ${index})">Remove</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(type, index) {
+            if (type === 'pdf') {
+                uploadedPdfFiles.splice(index, 1);
+                updateFileList('pdf');
+            } else {
+                uploadedTxtFiles.splice(index, 1);
+                updateFileList('txt');
+            }
+            generateFilePairs();
+        }
+
+        async function generateFilePairs() {
+            console.log('Generating file pairs...');
+            console.log('PDF files:', uploadedPdfFiles);
+            console.log('TXT files:', uploadedTxtFiles);
+            
+            filePairs = [];
+
+            if (uploadedPdfFiles.length === 0 || uploadedTxtFiles.length === 0) {
+                console.log('Not enough files for pairing. PDF:', uploadedPdfFiles.length, 'TXT:', uploadedTxtFiles.length);
+                updateFilePairsDisplay();
+                return;
+            }
+
+            // Use part number matching API
+            try {
+                const response = await fetch('/api/match-files-by-parts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        pdf_files: uploadedPdfFiles,
+                        txt_files: uploadedTxtFiles
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    filePairs = result.matches.map(match => ({
+                        pdf: match.pdf,
+                        txt: match.txt,
+                        match_score: match.match_score,
+                        pdf_parts: match.pdf_parts,
+                        txt_parts: match.txt_parts
+                    }));
+                    console.log('Part number matching result:', result);
+                } else {
+                    console.error('Part number matching failed:', result.error);
+                    // Fallback to filename matching
+                    generateFilePairsByFilename();
+                }
+            } catch (error) {
+                console.error('Error in part number matching:', error);
+                // Fallback to filename matching
+                generateFilePairsByFilename();
+            }
+
+            updateFilePairsDisplay();
+        }
+
+        function generateFilePairsByFilename() {
+            // Fallback filename-based pairing logic
+            uploadedPdfFiles.forEach(pdf => {
+                const pdfName = pdf.filename.replace(/\.pdf$/i, '');
+                let matchingTxt = null;
+
+                // Method 1: Extract invoice numbers and match
+                const pdfInvoiceNumbers = extractInvoiceNumbers(pdfName);
+                if (pdfInvoiceNumbers.length > 0) {
+                    matchingTxt = uploadedTxtFiles.find(txt => {
+                        const txtName = txt.filename.replace(/\.txt$/i, '');
+                        const txtInvoiceNumbers = extractInvoiceNumbers(txtName);
+                        return pdfInvoiceNumbers.some(pdfNum => 
+                            txtInvoiceNumbers.some(txtNum => 
+                                pdfNum === txtNum || 
+                                pdfNum.includes(txtNum) || 
+                                txtNum.includes(pdfNum)
+                            )
+                        );
+                    });
+                }
+
+                // Method 2: If no invoice number match, try substring matching
+                if (!matchingTxt) {
+                    matchingTxt = uploadedTxtFiles.find(txt => {
+                        const txtName = txt.filename.replace(/\.txt$/i, '');
+                        return txtName.toLowerCase().includes(pdfName.toLowerCase()) ||
+                               pdfName.toLowerCase().includes(txtName.toLowerCase());
+                    });
+                }
+
+                filePairs.push({
+                    pdf: pdf,
+                    txt: matchingTxt || null,
+                    match_score: matchingTxt ? 1 : 0
+                });
+            });
+        }
+
+        function extractInvoiceNumbers(filename) {
+            // Extract common invoice number patterns
+            const patterns = [
+                /\b(\d{3,}[A-Z]-\d{8,})\b/g,  // Pattern like 074M-22005698
+                /\b(\d{3,}[A-Z]\d{8,})\b/g,   // Pattern like 074M22005698
+                /\b(\d{8,})\b/g,              // Long number sequences
+                /\b([A-Z]{2,}\d{6,})\b/g      // Letter-number combinations
+            ];
+            
+            const numbers = [];
+            patterns.forEach(pattern => {
+                const matches = filename.match(pattern);
+                if (matches) {
+                    numbers.push(...matches);
+                }
+            });
+            
+            return [...new Set(numbers)]; // Remove duplicates
+        }
+
+        function extractCommonPatterns(filename) {
+            // Extract common business document patterns
+            const patterns = [
+                /invoice/gi,
+                /factura/gi,
+                /export/gi,
+                /commercial/gi,
+                /bill/gi,
+                /receipt/gi
+            ];
+            
+            const found = [];
+            patterns.forEach(pattern => {
+                if (pattern.test(filename)) {
+                    found.push(pattern.source.replace(/[\/\(\)]/g, ''));
+                }
+            });
+            
+            return found;
+        }
+
+        function updateFilePairsDisplay() {
+            const filePairsSection = document.getElementById('filePairsSection');
+            const filePairsList = document.getElementById('filePairsList');
+            const processBtn = document.getElementById('processCombinedBtn');
+
+            console.log('Updating file pairs display. File pairs:', filePairs);
+            console.log('File pairs length:', filePairs.length);
+
+            if (filePairs.length === 0) {
+                console.log('No file pairs, hiding section and disabling button');
+                filePairsSection.style.display = 'none';
+                processBtn.disabled = true;
+                return;
+            }
+
+            console.log('File pairs available, showing section and enabling button');
+            filePairsSection.style.display = 'block';
+            filePairsList.innerHTML = '';
+
+            filePairs.forEach((pair, index) => {
+                const pairDiv = document.createElement('div');
+                pairDiv.className = 'file-pair';
+                
+                // Show match score and part numbers if available
+                let matchInfo = '';
+                if (pair.match_score !== undefined) {
+                    if (pair.match_score > 0) {
+                        const matchType = pair.pdf_has_text ? 'Part number match' : 'Fallback match (PDF has no text)';
+                        matchInfo = `
+                            <div style="background: #d4edda; color: #155724; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px;">
+                                <strong>✅ ${matchType} (Score: ${pair.match_score})</strong>
+                                ${pair.pdf_parts && pair.pdf_parts.length > 0 ? `<br>PDF Parts: ${pair.pdf_parts.join(', ')}` : '<br>PDF: No extractable text'}
+                                ${pair.txt_parts && pair.txt_parts.length > 0 ? `<br>TXT Parts: ${pair.txt_parts.slice(0, 5).join(', ')}${pair.txt_parts.length > 5 ? '...' : ''}` : ''}
+                                ${pair.txt_parts && pair.txt_parts.length > 5 ? `<br><em>(${pair.txt_parts.length} total parts in TXT file)</em>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        matchInfo = `
+                            <div style="background: #f8d7da; color: #721c24; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 12px;">
+                                <strong>❌ No part number matches found</strong>
+                                ${pair.pdf_parts && pair.pdf_parts.length > 0 ? `<br>PDF Parts: ${pair.pdf_parts.join(', ')}` : '<br>PDF: No extractable text'}
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Create TXT file selector if no match found
+                let txtSelector = '';
+                if (!pair.txt && uploadedTxtFiles.length > 0) {
+                    txtSelector = `
+                        <select onchange="updateTxtPair(${index}, this.value)" class="form-input" style="margin-top: 5px;">
+                            <option value="">Select TXT file manually...</option>
+                            ${uploadedTxtFiles.map(txt => 
+                                `<option value="${txt.filename}">${txt.filename}</option>`
+                            ).join('')}
+                        </select>
+                    `;
+                }
+                
+                pairDiv.innerHTML = `
+                    <div class="pair-label">Pair ${index + 1}:</div>
+                    <div class="pair-files">
+                        <div class="pair-file">
+                            <strong>📄 PDF:</strong> ${pair.pdf.filename}
+                        </div>
+                        <div class="pair-file">
+                            <strong>📝 TXT:</strong> ${pair.txt ? pair.txt.filename : 'No matching TXT file'}
+                            ${txtSelector}
+                        </div>
+                    </div>
+                    ${matchInfo}
+                `;
+                filePairsList.appendChild(pairDiv);
+            });
+
+            processBtn.disabled = false;
+        }
+
+        // Function to manually update TXT file pairing
+        function updateTxtPair(pairIndex, txtFilename) {
+            if (txtFilename) {
+                const selectedTxt = uploadedTxtFiles.find(txt => txt.filename === txtFilename);
+                if (selectedTxt) {
+                    filePairs[pairIndex].txt = selectedTxt;
+                    updateFilePairsDisplay(); // Refresh the display
+                }
+            }
+        }
+
+        // Combined processing
+        document.getElementById('processCombinedBtn').addEventListener('click', async () => {
+            console.log('Process button clicked!');
+            console.log('File pairs:', filePairs);
+            console.log('File pairs length:', filePairs.length);
+            
+            if (filePairs.length === 0) {
+                console.log('No file pairs available, returning');
+                showAlert('error', 'No file pairs available for processing');
+                return;
+            }
+
+            console.log('Starting processing...');
+            showLoading();
+            hideResults();
+
+            try {
+                const invoiceNumber = document.getElementById('combinedInvoiceNumber').value || null;
+                console.log('Invoice number:', invoiceNumber);
+                
+                const requestData = {
+                    file_pairs: filePairs,
+                    invoice_number: invoiceNumber
+                };
+                console.log('Request data:', requestData);
+                
+                const response = await fetch('/api/process-combined', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response data:', result);
+
+                if (response.ok) {
+                    processingResults = result;
+                    displayCombinedResults(result);
+                    hideLoading();
+                    showAlert('success', result.message);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                console.error('Processing error:', error);
+                hideLoading();
+                showAlert('error', `Processing failed: ${error.message}`);
+            }
+        });
+
+        function displayCombinedResults(results) {
+            const resultsSection = document.getElementById('resultsSection');
+            const summaryStats = document.getElementById('summaryStats');
+            const processingSummary = document.getElementById('processingSummary');
+            const processingDetails = document.getElementById('processingDetails');
+
+            resultsSection.style.display = 'block';
+
+            // Enhanced stats grid with quantity prominently displayed
+            summaryStats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value quantity-highlight">${results.summary.total_quantity?.toLocaleString() || 0}</div>
+                    <div class="stat-label">Total Quantity</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.summary.total_files_processed}</div>
+                    <div class="stat-label">Files Processed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.summary.total_line_items || results.summary.total_lines}</div>
+                    <div class="stat-label">Line Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.summary.unique_skus || 0}</div>
+                    <div class="stat-label">Unique SKUs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$${results.summary.total_value?.toLocaleString() || 0}</div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+            `;
+
+            // Processing summary
+            processingSummary.innerHTML = `
+                <div class="summary-title">Processing Summary</div>
+                <div class="summary-item">
+                    <span class="summary-label">Processing Time:</span>
+                    <span class="summary-value">${new Date(results.summary.processing_timestamp || results.summary.timestamp).toLocaleString()}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">File Type Breakdown:</span>
+                    <span class="summary-value">${Object.entries(results.summary.file_types || {}).map(([type, count]) => `${type} (${count})`).join(', ') || 'N/A'}</span>
+                </div>
+            `;
+
+            // Display pre and post aggregation data
+            displayDataViews(results);
+
+            // Processing details
+            processingDetails.innerHTML = `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <h4>File Processing Details</h4>
+                    ${filePairs.map((pair, index) => `
+                        <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+                            <strong>Pair ${index + 1}:</strong> ${pair.pdf.filename}${pair.txt ? ` + ${pair.txt.filename}` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Set up download buttons
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.innerHTML = `
+                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Raw CSV
+            `;
+            downloadBtn.onclick = () => {
+                window.open(`/api/download/${results.download_filename}`, '_blank');
+            };
+            
+            // Remove existing aggregated button if it exists
+            const existingAggregatedBtn = document.getElementById('downloadAggregatedBtn');
+            if (existingAggregatedBtn) {
+                existingAggregatedBtn.remove();
+            }
+            
+            // Add aggregated download button if available
+            if (results.aggregated_filename) {
+                const aggregatedBtn = document.createElement('button');
+                aggregatedBtn.id = 'downloadAggregatedBtn';
+                aggregatedBtn.className = 'btn btn-success btn-lg';
+                aggregatedBtn.innerHTML = `
+                    <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Aggregated CSV
+                `;
+                aggregatedBtn.onclick = () => {
+                    window.open(`/api/download/${results.aggregated_filename}`, '_blank');
+                };
+                document.querySelector('.result-actions').appendChild(aggregatedBtn);
+            }
+        }
+
+        function displayDataViews(results) {
+            // Pre-aggregation stats
+            const preStats = document.getElementById('preAggregationStats');
+            preStats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value quantity-highlight">${results.summary.total_quantity?.toLocaleString() || 0}</div>
+                    <div class="stat-label">Total Quantity</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.raw_data?.total_rows || results.summary.total_line_items || results.summary.total_lines}</div>
+                    <div class="stat-label">Total Rows</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$${results.summary.total_value?.toLocaleString() || 0}</div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+            `;
+
+            // Post-aggregation stats
+            const postStats = document.getElementById('postAggregationStats');
+            postStats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value quantity-highlight">${results.summary.aggregated?.total_quantity?.toLocaleString() || results.summary.total_quantity?.toLocaleString() || 0}</div>
+                    <div class="stat-label">Total Quantity</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.aggregated_data?.total_rows || results.summary.aggregated?.total_lines || 0}</div>
+                    <div class="stat-label">Unique SKUs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$${results.summary.aggregated?.total_value?.toLocaleString() || results.summary.total_value?.toLocaleString() || 0}</div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+            `;
+
+            // Display data tables
+            displayDataTable('preAggregationTable', results.raw_data?.sample || []);
+            displayDataTable('postAggregationTable', results.aggregated_data?.sample || []);
+
+            // Set up tab switching
+            setupDataViewTabs();
+        }
+
+        function displayDataTable(containerId, data) {
+            const container = document.getElementById(containerId);
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p style="padding: 20px; text-align: center; color: #6c757d;">No data available</p>';
+                return;
+            }
+
+            const columns = Object.keys(data[0]);
+            let html = '<table class="data-table"><thead><tr>';
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            data.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    const value = row[col];
+                    const displayValue = typeof value === 'number' ? value.toLocaleString() : (value || '');
+                    html += `<td>${displayValue}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function setupDataViewTabs() {
+            const tabs = document.querySelectorAll('.data-view-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const view = tab.dataset.view;
+                    
+                    // Update tab states
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update content visibility
+                    document.querySelectorAll('.data-view-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    if (view === 'pre-aggregation') {
+                        document.getElementById('preAggregationView').classList.add('active');
+                    } else {
+                        document.getElementById('postAggregationView').classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Legacy single file processing (keep existing functionality)
+        const uploadForm = document.getElementById('uploadForm');
+        const processBtn = document.getElementById('processBtn');
+        const previewBtn = document.getElementById('previewBtn');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (currentMode !== 'single') return;
+            
+            showLoading();
+            hideResults();
+
+            try {
+                const formData = new FormData(uploadForm);
+                
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    processingResults = result;
+                    displaySingleResults(result);
+                    hideLoading();
+                    showAlert('success', result.message);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                hideLoading();
+                showAlert('error', `Processing failed: ${error.message}`);
+            }
+        });
+
+        function displaySingleResults(results) {
+            const resultsSection = document.getElementById('resultsSection');
+            const summaryStats = document.getElementById('summaryStats');
+            const processingSummary = document.getElementById('processingSummary');
+
+            resultsSection.style.display = 'block';
+
+            // Stats grid for single file with quantity prominently displayed
+            summaryStats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value quantity-highlight">${results.summary.total_quantity?.toLocaleString() || 0}</div>
+                    <div class="stat-label">Total Quantity</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.summary.total_lines}</div>
+                    <div class="stat-label">Line Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.summary.unique_skus || results.summary.unique_hts_codes}</div>
+                    <div class="stat-label">Unique SKUs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">$${results.summary.total_value?.toLocaleString() || 0}</div>
+                    <div class="stat-label">Total Value</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${results.summary.unique_hts_codes || 0}</div>
+                    <div class="stat-label">Unique HTS Codes</div>
+                </div>
+            `;
+
+            // Processing summary
+            processingSummary.innerHTML = `
+                <div class="summary-title">Processing Summary</div>
+                <div class="summary-item">
+                    <span class="summary-label">Invoice Number:</span>
+                    <span class="summary-value">${results.summary.invoice_number}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Processing Time:</span>
+                    <span class="summary-value">${new Date(results.summary.timestamp).toLocaleString()}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Total Net Weight:</span>
+                    <span class="summary-value">${results.summary.total_net_weight || 0} kg</span>
+                </div>
+            `;
+
+            // Display pre and post aggregation data
+            displayDataViews(results);
+
+            // Set up download buttons
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.innerHTML = `
+                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Raw CSV
+            `;
+            downloadBtn.onclick = () => {
+                window.open(`/api/download/${results.download_filename}`, '_blank');
+            };
+            
+            // Remove existing aggregated button if it exists
+            const existingAggregatedBtn = document.getElementById('downloadAggregatedBtn');
+            if (existingAggregatedBtn) {
+                existingAggregatedBtn.remove();
+            }
+            
+            // Add aggregated download button if available
+            if (results.aggregated_filename) {
+                const aggregatedBtn = document.createElement('button');
+                aggregatedBtn.id = 'downloadAggregatedBtn';
+                aggregatedBtn.className = 'btn btn-success btn-lg';
+                aggregatedBtn.innerHTML = `
+                    <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download Aggregated CSV
+                `;
+                aggregatedBtn.onclick = () => {
+                    window.open(`/api/download/${results.aggregated_filename}`, '_blank');
+                };
+                document.querySelector('.result-actions').appendChild(aggregatedBtn);
+            }
+        }
+
+        // Utility functions
+        function showLoading() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        function hideResults() {
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+
+        function showAlert(type, message) {
+            const alertId = type === 'error' ? 'errorAlert' : 'successAlert';
+            const messageId = type === 'error' ? 'errorMessage' : 'successMessage';
+            
+            document.getElementById(messageId).textContent = message;
+            document.getElementById(alertId).style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById(alertId).style.display = 'none';
+            }, 5000);
+        }
+
+        function closeAlert() {
+            document.getElementById('errorAlert').style.display = 'none';
+            document.getElementById('successAlert').style.display = 'none';
+        }
+
+        // File name display for single file mode
+        document.getElementById('dataFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'Choose file or drag here';
+            document.getElementById('fileName').textContent = fileName;
+        });
+
+        // Process another button
+        document.getElementById('processAnotherBtn').addEventListener('click', () => {
+            hideResults();
+            // Remove aggregated download button if it exists
+            const existingAggregatedBtn = document.getElementById('downloadAggregatedBtn');
+            if (existingAggregatedBtn) {
+                existingAggregatedBtn.remove();
+            }
+            uploadedPdfFiles = [];
+            uploadedTxtFiles = [];
+            filePairs = [];
+            updateFileList('pdf');
+            updateFileList('txt');
+            generateFilePairs();
+            document.getElementById('uploadForm').reset();
+            document.getElementById('fileName').textContent = 'Choose file or drag here';
+            document.getElementById('combinedInvoiceNumber').value = '';
+            document.getElementById('invoiceNumber').value = '';
+        });
+    </script>
+</body>
+</html>

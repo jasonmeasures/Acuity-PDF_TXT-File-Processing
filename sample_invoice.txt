@@ -1,0 +1,14 @@
+Invoice Number: INV-2024-001
+Invoice Date: 2024-01-15
+Seller: Global Tech Solutions Inc.
+Seller Address: 123 Technology Drive, San Francisco, CA 94105
+Buyer: International Trading Company
+Buyer Address: 456 Commerce Street, New York, NY 10001
+Terms of Sale: FOB
+Payment Terms: Net 30
+Currency: USD
+Total Amount: $125,750.00
+Country of Origin: United States
+Country of Destination: Germany
+Description: Electronic Components and Computer Hardware
+

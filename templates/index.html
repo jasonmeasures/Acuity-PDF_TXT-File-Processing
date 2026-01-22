@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commercial Invoice Processor</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>
+                    <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Commercial Invoice Processor
+                </h1>
+                <p class="header-subtitle">Process customs documentation and match HTS codes</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Upload Invoice Data</h2>
+                    <p>Upload your tab-delimited invoice data file (.txt or .csv)</p>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="dataFile" class="form-label">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                Invoice Data File
+                            </label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="dataFile" name="data_file" accept=".txt,.csv" required>
+                                <label for="dataFile" class="file-upload-label">
+                                    <span id="fileName">Choose file or drag here</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="invoiceNumber" class="form-label">
+                                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                                Invoice Number (Optional)
+                            </label>
+                            <input type="text" id="invoiceNumber" name="invoice_number" class="form-input" placeholder="e.g., 074M-22005649">
+                            <small class="form-help">Leave blank to process all invoices in the file</small>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary" id="processBtn">
+                                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Process Invoice
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="previewBtn">
+                                <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                Preview Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processing your invoice data...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="card results-section" style="display: none;">
+                <div class="card-header">
+                    <h2>Processing Results</h2>
+                </div>
+                <div class="card-body">
+                    <div id="summaryStats" class="stats-grid">
+                        <!-- Stats will be populated here -->
+                    </div>
+
+                    <div class="result-actions">
+                        <button id="downloadBtn" class="btn btn-success btn-lg">
+                            <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download Processed CSV
+                        </button>
+                        <button id="processAnotherBtn" class="btn btn-secondary">
+                            Process Another Invoice
+                        </button>
+                    </div>
+
+                    <div id="detailsSection" class="details-section">
+                        <h3>Breakdown by Country</h3>
+                        <div id="countryBreakdown" class="breakdown-list"></div>
+
+                        <h3>Top HTS Codes by Value</h3>
+                        <div id="htsBreakdown" class="breakdown-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Alert -->
+            <div id="errorAlert" class="alert alert-error" style="display: none;">
+                <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <div class="alert-content">
+                    <h4>Error</h4>
+                    <p id="errorMessage"></p>
+                </div>
+                <button class="alert-close" onclick="closeAlert()">×</button>
+            </div>
+
+            <!-- Success Alert -->
+            <div id="successAlert" class="alert alert-success" style="display: none;">
+                <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <div class="alert-content">
+                    <h4>Success</h4>
+                    <p id="successMessage"></p>
+                </div>
+                <button class="alert-close" onclick="closeAlert()">×</button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2025 Invoice Processing System | Internal Use Only</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

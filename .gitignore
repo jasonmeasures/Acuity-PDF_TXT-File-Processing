@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Flask
+instance/
+.webassets-cache
+
+# Logs
+*.log
+app_debug.log
+app.log
+server.log
+
+# Uploads and Outputs (temporary files)
+uploads/*.pdf
+uploads/*.txt
+outputs/*.csv
+
+# Keep directory structure but ignore contents
+!uploads/.gitkeep
+!outputs/.gitkeep
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment variables
+.env
+.env.local
