@@ -260,7 +260,21 @@ def extract_part_numbers_from_text(text, invoice_number=None):
                    'ONLY', 'ROAD', 'EXPRESS', 'GATEWAY', 'SOUTH', 'PLAINES',
                    'JUNO', 'WOLF', 'KALOS', 'KGGR', 'KGNT', '58PM', '36PM',
                    'ABL941020S81', '1C926', '1C22', 'NPP20', 'LSXR', 'J100',
-                   'WRDC', 'ND98413', '2633371', '252829']):
+                   'WRDC', 'ND98413', '2633371', '252829',
+                   # Shipping/Document identifiers (not part numbers)
+                   'NPD', 'MJCR', 'SCAC', 'BOL', 'AWB', 'PRO', 'PO', 'SO',
+                   'ENTRY', 'SHIPMENT', 'TRACKING', 'CONTAINER', 'BOOKING',
+                   # Measurement units (not part numbers)
+                   'LM', 'LMN', 'LUMEN', 'MA', 'AMP', 'VOLT', 'WATT', 'KG', 'LBS',
+                   # Document prefixes
+                   'PD00', 'NPD00', 'EG0']):
+            # Skip numbers that look like document/shipment/entry numbers
+            # NPD00357349, 2624034386002641, etc. are too long to be part numbers
+            if len(num) > 12:  # Part numbers typically < 12 characters
+                continue
+            # Skip pure numeric IDs longer than 8 digits (likely document/tracking numbers)
+            if num.isdigit() and len(num) > 8:
+                continue
             # Additional filtering for pure numbers (likely not part numbers)
             if not (num.isdigit() and len(num) <= 4):
                 filtered_numbers.append(num)
@@ -327,7 +341,13 @@ def match_files_by_part_numbers(pdf_files, txt_files):
     for pdf_file in pdf_files:
         # Extract text from PDF
         pdf_text = extract_text_from_pdf(pdf_file['filepath'])
-        pdf_part_numbers = extract_part_numbers_from_text(pdf_text)
+        
+        # Parse invoice data to get invoice number for filtering
+        parsed_data = parse_invoice_from_text(pdf_text)
+        invoice_number = parsed_data.get('invoice_number')
+        
+        # Extract part numbers from PDF, excluding invoice number
+        pdf_part_numbers = extract_part_numbers_from_text(pdf_text, invoice_number=invoice_number)
         
         best_match = None
         max_matches = 0
