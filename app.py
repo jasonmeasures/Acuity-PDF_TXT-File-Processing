@@ -180,13 +180,23 @@ def parse_invoice_from_text(text):
                 data[field] = match.group(1).strip()
                 break
     
-    # Extract part numbers from PDF text
-    data['part_numbers'] = extract_part_numbers_from_text(text)
+    # Extract part numbers from PDF text, excluding the invoice number if found
+    invoice_num = data.get('invoice_number')
+    data['part_numbers'] = extract_part_numbers_from_text(text, invoice_number=invoice_num)
     
     return data
 
-def extract_part_numbers_from_text(text):
-    """Extract part numbers from text content with improved filtering"""
+def extract_part_numbers_from_text(text, invoice_number=None):
+    """
+    Extract part numbers from text content with improved filtering
+    
+    Args:
+        text: Text content to extract part numbers from
+        invoice_number: Optional invoice number to exclude from results
+    
+    Returns:
+        List of filtered part numbers
+    """
     part_numbers = []
     
     # More specific part number patterns based on your actual data
@@ -205,10 +215,34 @@ def extract_part_numbers_from_text(text):
         matches = re.findall(pattern, text)
         part_numbers.extend(matches)
     
+    # Build dynamic invoice number filter patterns
+    invoice_patterns = []
+    if invoice_number:
+        # Add the exact invoice number and variations
+        invoice_patterns.append(invoice_number.upper())
+        # Remove dashes and add that variation
+        invoice_patterns.append(invoice_number.replace('-', '').upper())
+        # Extract just the numeric part if it has a pattern like 074M-22006670
+        numeric_match = re.search(r'(\d{8,})', invoice_number)
+        if numeric_match:
+            invoice_patterns.append(numeric_match.group(1))
+        # Extract prefix part (like 074M)
+        prefix_match = re.search(r'^(\d{3,}[A-Z]+)', invoice_number)
+        if prefix_match:
+            invoice_patterns.append(prefix_match.group(1))
+    
     # Remove duplicates and filter out common false positives
     filtered_numbers = []
     for num in set(part_numbers):
-        # More comprehensive filtering
+        # Skip if matches invoice number or its variations
+        if invoice_number and any(
+            inv_pattern in num.upper() or 
+            num.upper() in inv_pattern or
+            num.upper() == inv_pattern
+            for inv_pattern in invoice_patterns
+        ):
+            continue
+        # More comprehensive filtering (removed specific invoice numbers - now handled dynamically above)
         if not any(false_positive in num.upper() for false_positive in 
                   ['USD', 'FOB', 'NET', 'TOTAL', 'DATE', 'INVOICE', 'QUANTITY', 'MX', 'US', 
                    'PAGE', 'ENTRY', 'PORT', 'VALUE', 'RATE', 'DUTY', 'PACKING', 'WEIGHT',
@@ -226,9 +260,7 @@ def extract_part_numbers_from_text(text):
                    'ONLY', 'ROAD', 'EXPRESS', 'GATEWAY', 'SOUTH', 'PLAINES',
                    'JUNO', 'WOLF', 'KALOS', 'KGGR', 'KGNT', '58PM', '36PM',
                    'ABL941020S81', '1C926', '1C22', 'NPP20', 'LSXR', 'J100',
-                   'WRDC', 'ND98413', '2633371', '252829', 'M52G22002159',
-                   '152G22002159', '074M225749', '74M225749', '22005749',
-                   '074M', '152G', 'M52G', '74M', '152G22002159']):
+                   'WRDC', 'ND98413', '2633371', '252829']):
             # Additional filtering for pure numbers (likely not part numbers)
             if not (num.isdigit() and len(num) <= 4):
                 filtered_numbers.append(num)
@@ -349,26 +381,24 @@ def process_invoice_data(file_path, file_type, invoice_number=None):
     """
     
     if file_type == 'pdf':
-        # Extract text from PDF and parse
+        # Extract text from PDF and parse metadata
+        # NOTE: PDF files contain invoice metadata but not detailed line items
+        # Line items should come from the paired TXT file
+        # Return empty DataFrame - actual line items will come from TXT file
         text = extract_text_from_pdf(file_path)
         parsed_data = parse_invoice_from_text(text)
         
-        # Convert to DataFrame format
-        output_data = [{
-            'SKU': parsed_data.get('invoice_number', 'N/A'),
-            'DESCRIPTION': f"Invoice from {parsed_data.get('seller_name', 'Unknown')}",
-            'HTS': 'N/A',
-            'COUNTRY OF ORIGIN': parsed_data.get('country_origin', 'N/A'),
-            'NO. OF PACKAGE': '1',
-            'QUANTITY': 1,
-            'NET WEIGHT': 0.0,
-            'GROSS WEIGHT': 0.0,
-            'UNIT PRICE': float(parsed_data.get('total_amount', '0').replace(',', '')) if parsed_data.get('total_amount') else 0.0,
-            'VALUE': float(parsed_data.get('total_amount', '0').replace(',', '')) if parsed_data.get('total_amount') else 0.0,
-            'QTY UNIT': 'EA'
-        }]
+        # Log extracted invoice metadata for debugging
+        print(f"PDF Invoice Number: {parsed_data.get('invoice_number', 'N/A')}")
+        print(f"PDF Seller: {parsed_data.get('seller_name', 'Unknown')}")
+        print(f"PDF Country: {parsed_data.get('country_origin', 'N/A')}")
         
-        return pd.DataFrame(output_data)
+        # Return empty DataFrame - do NOT create a line item from invoice metadata
+        # The paired TXT file will provide the actual line items
+        return pd.DataFrame(columns=[
+            'SKU', 'DESCRIPTION', 'HTS', 'COUNTRY OF ORIGIN', 'NO. OF PACKAGE',
+            'QUANTITY', 'NET WEIGHT', 'GROSS WEIGHT', 'UNIT PRICE', 'VALUE', 'QTY UNIT'
+        ])
     
     elif file_type == 'txt':
         # Check if it's structured tab-delimited data or unstructured text
@@ -881,19 +911,33 @@ def process_combined_files():
         # Generate aggregated data
         aggregated_df = aggregate_by_sku(final_df)
         
+        # Extract invoice number from first PDF if not provided
+        if not invoice_number and file_pairs:
+            try:
+                first_pdf = file_pairs[0].get('pdf')
+                if first_pdf:
+                    text = extract_text_from_pdf(first_pdf['filepath'])
+                    parsed_data = parse_invoice_from_text(text)
+                    invoice_number = parsed_data.get('invoice_number', None)
+                    print(f"Extracted invoice number from PDF: {invoice_number}")
+            except Exception as e:
+                print(f"Could not extract invoice number from PDF: {e}")
+        
         # Generate summary with aggregated data
         summary = generate_summary(final_df, invoice_number or 'ALL', include_aggregated=True)
         combined_summary.update(summary)
         
         # Generate final output CSV with proper number formatting (save raw data)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_filename = f"{timestamp}_combined_processed.csv"
+        # Include invoice number in filename for easy identification
+        safe_invoice = (invoice_number or 'ALL').replace('/', '-').replace('\\', '-').replace(' ', '_')
+        output_filename = f"{timestamp}_{safe_invoice}_combined_processed.csv"
         output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
         # Use custom formatting function to ensure numbers are written as plain decimals
         write_csv_with_proper_formatting(final_df, output_path)
         
         # Also save aggregated CSV
-        aggregated_filename = f"{timestamp}_combined_aggregated.csv"
+        aggregated_filename = f"{timestamp}_{safe_invoice}_combined_aggregated.csv"
         aggregated_path = os.path.join(app.config['OUTPUT_FOLDER'], aggregated_filename)
         write_csv_with_proper_formatting(aggregated_df, aggregated_path)
         
@@ -956,6 +1000,17 @@ def process_invoice():
         if len(result_df) == 0:
             return jsonify({'error': 'No data found for the specified invoice number'}), 404
         
+        # Extract invoice number from file if not provided
+        if not invoice_number:
+            try:
+                if file_type == 'pdf':
+                    text = extract_text_from_pdf(filepath)
+                    parsed_data = parse_invoice_from_text(text)
+                    invoice_number = parsed_data.get('invoice_number', None)
+                    print(f"Extracted invoice number from file: {invoice_number}")
+            except Exception as e:
+                print(f"Could not extract invoice number: {e}")
+        
         # Generate aggregated data
         aggregated_df = aggregate_by_sku(result_df)
         
@@ -963,13 +1018,15 @@ def process_invoice():
         summary = generate_summary(result_df, invoice_number or 'ALL', include_aggregated=True)
         
         # Save output CSV with proper number formatting (save raw data)
-        output_filename = f"{timestamp}_processed_{invoice_number or 'ALL'}.csv"
+        # Include invoice number in filename for easy identification
+        safe_invoice = (invoice_number or 'ALL').replace('/', '-').replace('\\', '-').replace(' ', '_')
+        output_filename = f"{timestamp}_{safe_invoice}_processed.csv"
         output_path = os.path.join(app.config['OUTPUT_FOLDER'], output_filename)
         # Use custom formatting function to ensure numbers are written as plain decimals
         write_csv_with_proper_formatting(result_df, output_path)
         
         # Also save aggregated CSV
-        aggregated_filename = f"{timestamp}_processed_{invoice_number or 'ALL'}_aggregated.csv"
+        aggregated_filename = f"{timestamp}_{safe_invoice}_aggregated.csv"
         aggregated_path = os.path.join(app.config['OUTPUT_FOLDER'], aggregated_filename)
         write_csv_with_proper_formatting(aggregated_df, aggregated_path)
         
